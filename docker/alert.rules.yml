@@ -1,0 +1,20 @@
+groups:
+  - name: fraud_alerts
+    rules:
+      - alert: HighScoringLatency
+        expr: scoring_latency_seconds_bucket{le="0.5"} < 0.9
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High model scoring latency"
+          description: "Less than 90% of requests are scoring in under 0.5 seconds"
+
+      - alert: DropInTraffic
+        expr: rate(scored_transactions_total[5m]) < 0.1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Possible scoring service downtime"
+          description: "Transaction scoring rate has dropped significantly in the last 5 minutes"

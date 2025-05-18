@@ -1,82 +1,88 @@
-End-to-End MLOps Pipeline for Fraud Detection
-=================================================
+# 🔍 End-to-End MLOps Pipeline for Real-Time Fraud Detection
 
-This project implements a production-grade MLOps pipeline for real-time credit card fraud detection. It ingests streaming transactions via Kafka, scores them with a LightGBM model served through MLflow, monitors activity with Prometheus + Grafana, and supports automated model retraining using Apache Airflow.
+A fully containerized MLOps project for **real-time credit card fraud detection** — built with Kafka, Airflow, MLflow, Prometheus, and Grafana.
 
->  **Stack**: Apache Kafka, MLflow, Airflow, LightGBM, Prometheus, Grafana, Docker, Python
+> Production-ready scoring + monitoring + auto-retraining
 
-* * *
+---
 
- Features
------------
+## 💡 Project Highlights
 
-* **Real-time scoring** of streaming transactions
-    
-*  **LightGBM model training + evaluation** on the IEEE-CIS dataset
-    
-*  **MLflow model serving and registry** with versioning
-    
-*  **Auto-retraining pipeline** triggered daily (Airflow DAG)
-    
-*  **Monitoring** with Prometheus & Grafana dashboards
-    
-*  Fully **containerized** with Docker Compose
-    
+- ⚡ **Real-time inference** with Kafka producers and consumers  
+- 🎯 **LightGBM model** trained on IEEE-CIS dataset  
+- 🔁 **Airflow DAG** for daily retraining and model promotion  
+- 📦 **MLflow Registry** for model tracking, versioning, and serving  
+- 📊 **Prometheus & Grafana dashboards** for latency, error rate, and volume  
+- 🐳 Fully dockerized, CI/CD-ready
 
-* * *
+---
 
- Folder Structure
--------------------
+## 📂 Project Structure
 
 ```bash
-├── kafka/                 # Kafka producer and scoring consumer
-├── model/                 # Training + promotion logic
-├── airflow/               # DAGs, logs, Airflow configs
-├── docker/                # Dockerfiles + Compose setup
-├── mlruns/                # MLflow run artifacts
-├── architecture/          # Architecture diagrams (.drawio, .svg, .gif)
-├── data/                  # Raw dataset (IEEE-CIS Fraud Detection)
-└── README.md              # This file
+├── kafka/          # Kafka producer and scoring consumer
+├── model/          # Training and model registry logic
+├── airflow/        # DAGs for retraining and promotion
+├── grafana/        # Dashboard provisioning configs
+├── docker/         # Dockerfiles + docker-compose + prometheus.yml
+├── data/           # IEEE-CIS dataset
+├── architecture/   # Diagrams: system + dashboard
+├── mlruns/         # MLflow run artifacts
+└── README.md       # You're here
 ```
 
-* * *
+---
 
- Architecture
-----------------
+## 🛠️ Tech Stack
 
-![Architecture](demo/FinalArchitecture.png)
+| Component     | Tool                                      |
+|---------------|-------------------------------------------|
+| Model         | LightGBM                                  |
+| Serving       | MLflow (REST API)                         |
+| Streaming     | Apache Kafka                              |
+| Retraining    | Apache Airflow (daily DAG)                |
+| Monitoring    | Prometheus + Grafana                      |
+| Orchestration | Docker Compose                            |
+| Dataset       | [IEEE-CIS Fraud Detection](https://www.kaggle.com/competitions/ieee-fraud-detection) |
 
-* * *
+---
 
-Pipeline Overview
---------------------
+## 🧭 Architecture
 
-1. **Kafka** producer streams batches from `train_transaction.csv`
-    
-2. **Spark** or **Python KafkaConsumer** scores transactions using a live MLflow model
-    
-3. **MLflow** logs runs, metrics, and model artifacts (LightGBM)
-    
-4. **Airflow** DAG retrains the model daily and promotes if better
-    
-5. **Prometheus + Grafana** monitor metrics like scoring volume and failures
-    
+### System Flow
 
-* * *
+![Pipeline](demo/FinalArchitecture.png)
 
-Setup & Run
---------------
+1. Kafka producer streams batches from `train_transaction.csv`
+2. Kafka consumer scores each message using MLflow model
+3. Prometheus scrapes metrics from the scoring service
+4. Grafana visualizes scoring metrics + model version
+5. Airflow retrains daily and promotes new model if ROC AUC improves
+
+---
+
+## 🚀 Getting Started
 
 ### 1. Add Dataset
 
-Download the IEEE-CIS dataset and place it in `./data/`.
+Place `train_transaction.csv` and `train_identity.csv` in `./data/`.
+
+---
 
 ### 2. Start Services
 
 ```bash
-cd docker
+cd docker/
 docker-compose up --build
 ```
+
+Starts:
+- Kafka (w/ Zookeeper)
+- Prometheus + Grafana
+- Airflow (scheduler + webserver)
+- MLflow tracking server
+
+---
 
 ### 3. Train Initial Model
 
@@ -84,7 +90,10 @@ docker-compose up --build
 python model/train_model.py
 ```
 
-Model is registered in MLflow and promoted to Staging.
+- Logs metrics + artifacts to MLflow
+- Registers model to `Staging` in Model Registry
+
+---
 
 ### 4. Start Streaming & Scoring
 
@@ -93,89 +102,82 @@ python kafka/producer.py --file data/fraud_sample.csv --topic raw-transactions
 python kafka/kafka_score.py
 ```
 
-* * *
+- Scoring results sent to `scored-transactions` topic
+- Prometheus metrics exposed at `localhost:8000/metrics`
 
-Monitoring
--------------
+---
 
-* **MLflow UI** → [http://localhost:5001](http://localhost:5001)
-    
-* **Airflow UI** → [http://localhost:8080](http://localhost:8080)
-    
-* **Prometheus** → [http://localhost:9090](http://localhost:9090)
-    
-* **Grafana** → [http://localhost:3000](http://localhost:3000)
-    
+## 📊 Observability
 
-> Default credentials: `admin` / `admin`
+| Tool        | URL                       | Login      |
+|-------------|----------------------------|------------|
+| **MLflow**  | `http://localhost:5001`    | —          |
+| **Airflow** | `http://localhost:8080`    | `airflow` / `airflow` |
+| **Prometheus** | `http://localhost:9090` | —          |
+| **Grafana** | `http://localhost:3000`    | `admin` / `admin` |
 
-* * *
+---
 
-Retraining Logic (Airflow)
------------------------------
+## 📈 Grafana Dashboards
 
-* DAG: `retrain_fraud_model`
-    
-* Tasks:
-    
-    * `retrain_model`: runs `train_model.py`
-        
-    * `promote_if_better`: compares new ROC AUC with existing and promotes model if better
-        
+Auto-provisioned with panels for:
 
-* * *
+- ✅ Total Scored Transactions  
+- ❌ Failed Transactions  
+- 📉 Error Rate  
+- ⏱️ Latency (ms)  
+- 🔁 Model Version  
+- 📊 Daily Predictions  
 
- Sample Grafana Dashboard
----------------------------
-![Architecture](demo/GrafanaDashboard.png)
+> Dashboard auto-imported from `grafana/provisioning/` at startup.
 
-* * *
+---
 
- Key Learnings
-----------------
+## 🔁 Auto-Retraining (Airflow)
 
-* Built a reliable CI/CD pipeline for ML workflows
-    
-* Hands-on with MLflow Registry, Airflow DAGs, and Kafka stream integration
-    
-* Exposed custom Prometheus metrics using `prometheus_client` in Python
-    
+- DAG: `retrain_fraud_model`
+- Tasks:
+  - `retrain_model`: Trains model + logs to MLflow
+  - `promote_if_better`: Promotes new model if ROC AUC improves
+- Runs daily via `@daily` schedule
 
-* * *
+---
 
- References
--------------
+## 📏 Custom Prometheus Metrics
 
-* IEEE-CIS Fraud Detection Dataset
-    
-* [MLflow Documentation](https://mlflow.org/)
-    
-* [Apache Airflow Docs](https://airflow.apache.org/)
-    
-* [Kafka Python](https://kafka-python.readthedocs.io/)
-    
+From `kafka_score.py`:
 
-* * *
+- `scored_transactions_total`
+- `failed_transactions_total`
+- `scoring_latency_seconds`
 
- Future Improvements
----------------------
+> Used in Grafana to visualize system health in real-time
 
-* Add concept drift detection (e.g., via `evidently`)
-    
-* Integrate alerting in Grafana
-    
+---
 
-    
+## 🧠 Learnings
 
-    
+- ✅ End-to-end MLOps orchestration from training → serving → monitoring
+- ✅ Integrated Prometheus/Grafana for metric visibility
+- ✅ Built MLflow + Airflow + Kafka into a scalable retraining loop
+- ✅ Hands-on with metric-based model promotion logic
 
-* * *
+---
 
-👨‍💻 Author
-------------
+## 🧰 Optional Improvements
+
+- Concept drift detection with [`evidently`](https://evidentlyai.com/)
+- Slack/email alerting via Grafana
+- Export model to ONNX / TorchScript for faster inference
+- Use AWS S3/MinIO for artifact storage
+
+---
+
+## 👨‍💻 Author
 
 **Tribhangin Dichpally**  
-Email: tribhangin@gmail.com  
+📧 [tribhangin@gmail.com](mailto:tribhangin@gmail.com)
 
+---
 
-* * *
+> ⚡ If you like this project, feel free to ⭐ the repo and fork it!

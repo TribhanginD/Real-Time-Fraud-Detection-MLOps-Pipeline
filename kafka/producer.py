@@ -24,9 +24,9 @@ def load_config(path="kafka/client.properties"):
 def delivery_report(err, msg):
     """Callback for message delivery reports."""
     if err is not None:
-        print(f"❌ Message delivery failed: {err}")
+        print(f" Message delivery failed: {err}")
     else:
-        print(f"✅ Delivered to {msg.topic()} [{msg.partition()}] @ offset {msg.offset()}")
+        print(f" Delivered to {msg.topic()} [{msg.partition()}] @ offset {msg.offset()}")
 
 def stream_transactions(csv_path, topic, delay, count=None):
     """Read CSV and send each row as a JSON message to Kafka."""

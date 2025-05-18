@@ -65,6 +65,7 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./alert.rules.yml:/etc/prometheus/alert.rules.yml
 
   # ─── Grafana ────────────────────────────────────────────────────────────────
   grafana:
@@ -77,6 +78,8 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: admin
     volumes:
       - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
     
   # ─── Apache Airflow ─────────────────────────────────────────────────────────────
   airflow-webserver:
