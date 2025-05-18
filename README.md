@@ -3,7 +3,7 @@ End-to-End MLOps Pipeline for Fraud Detection
 
 This project implements a production-grade MLOps pipeline for real-time credit card fraud detection. It ingests streaming transactions via Kafka, scores them with a LightGBM model served through MLflow, monitors activity with Prometheus + Grafana, and supports automated model retraining using Apache Airflow.
 
->  **Stack**: Apache Kafka, Spark Streaming, MLflow, Airflow, LightGBM, Prometheus, Grafana, Docker, Python
+>  **Stack**: Apache Kafka, MLflow, Airflow, LightGBM, Prometheus, Grafana, Docker, Python
 
 * * *
 
@@ -36,7 +36,6 @@ This project implements a production-grade MLOps pipeline for real-time credit c
 ├── mlruns/                # MLflow run artifacts
 ├── architecture/          # Architecture diagrams (.drawio, .svg, .gif)
 ├── data/                  # Raw dataset (IEEE-CIS Fraud Detection)
-├── spark/                 # Spark streaming consumer
 └── README.md              # This file
 ```
 
@@ -45,7 +44,7 @@ This project implements a production-grade MLOps pipeline for real-time credit c
  Architecture
 ----------------
 
-![Architecture](architecture/FinalArchitecture.gif)
+![Architecture](demo/FinalArchitecture.png)
 
 * * *
 
