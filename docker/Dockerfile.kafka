@@ -1,0 +1,4 @@
+# Dockerfile.kafka
+FROM confluentinc/cp-kafka:7.4.0
+# Expose ports
+EXPOSE 9092 2181

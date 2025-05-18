@@ -1,0 +1,136 @@
+services:
+  # ─── Zookeeper ─────────────────────────────────────────────────────────────
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+
+  # ─── Kafka ─────────────────────────────────────────────────────────────────
+  kafka:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+
+  # ─── Spark Consumer ─────────────────────────────────────────────────────────
+  spark:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.spark
+    depends_on:
+      - kafka
+    command: >
+      spark-submit
+      --master local[*]
+      --jars /opt/bitnami/spark/jars/*
+      /app/fraud_consumer.py
+
+  # ─── MinIO (local S3) ───────────────────────────────────────────────────────
+  minio:
+    image: minio/minio:latest
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    command: server /data
+    ports:
+      - "9000:9000"
+    volumes:
+      - minio_data:/data
+
+  # ─── MLflow Tracking Server ─────────────────────────────────────────────────
+  # mlflow:
+  #   image: ghcr.io/mlflow/mlflow:latest
+  #   user: root
+  #   command: >
+  #     mlflow server
+  #     --backend-store-uri sqlite:////mlflow-store/mlflow.db
+  #     --default-artifact-root file:///mlflow-store/mlruns
+  #     --host 0.0.0.0 --port 5050
+  #   ports:
+  #     - "5050:5050"
+  #   volumes:
+  #     - mlflow-store:/mlflow-store
+
+  # ─── Prometheus ─────────────────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+
+  # ─── Grafana ────────────────────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:latest
+    depends_on:
+      - prometheus
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    
+  # ─── Apache Airflow ─────────────────────────────────────────────────────────────
+  airflow-webserver:
+    image: apache/airflow:2.8.1
+    restart: always
+    depends_on:
+      - airflow-scheduler
+      - postgres
+    ports:
+      - "8080:8080"
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__CORE__FERNET_KEY: 'doCfGPyBFiqsUdTCiV99kBn-yUwqumb8rMSXBS7Lfpo='
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW__WEBSERVER__EXPOSE_CONFIG: 'true'
+      AIRFLOW_WWW_USER_USERNAME: 'airflow'
+      AIRFLOW_WWW_USER_PASSWORD: 'airflow'
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/plugins:/opt/airflow/plugins
+      -  .:/app
+    command: webserver
+ 
+ 
+  airflow-scheduler:
+    image: apache/airflow:2.8.1
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/plugins:/opt/airflow/plugins
+    command: scheduler
+  
+  # ─── Postgres (For Apache Airflow) ─────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+
+
+volumes:
+  minio_data:
+  grafana_data:
+  mlflow-store:
+  postgres_data:

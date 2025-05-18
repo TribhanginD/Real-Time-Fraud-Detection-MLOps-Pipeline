@@ -1,0 +1,7 @@
+/.venv
+*.log
+/docker/airflow/logs
+/mlruns
+/model/__pycache__
+/spark
+/data

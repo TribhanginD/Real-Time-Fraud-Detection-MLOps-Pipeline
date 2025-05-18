@@ -1,3 +1,18 @@
-scikit-learn
-mlflow
-pandas
+# Core data & ML
+pandas>=1.5
+lightgbm>=3.3
+joblib>=1.2
+
+# Model tracking
+mlflow>=2.4
+
+# Kafka integration
+confluent-kafka>=2.0
+kafka-python>=2.0
+
+# Spark
+pyspark>=3.5
+
+# Auxiliary
+requests>=2.28
+pytest>=7.2

@@ -1,0 +1,10 @@
+FROM bitnami/spark:3.5.0
+WORKDIR /app
+
+# copy the consumer script
+COPY ../spark/fraud_consumer.py /app/
+
+# copy the jars
+COPY ../spark/dependencies/ /opt/bitnami/spark/jars/
+
+CMD ["spark-submit", "--jars", "/opt/bitnami/spark/jars/*", "fraud_consumer.py"]
