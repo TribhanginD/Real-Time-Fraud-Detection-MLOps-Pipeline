@@ -93,7 +93,7 @@ services:
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
-      AIRFLOW__CORE__FERNET_KEY: 'doCfGPyBFiqsUdTCiV99kBn-yUwqumb8rMSXBS7Lfpo='
+      AIRFLOW__CORE__FERNET_KEY: #AIRFLOW__CORE__FERNET_KEY_HERE
       AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
       AIRFLOW__WEBSERVER__EXPOSE_CONFIG: 'true'
       AIRFLOW_WWW_USER_USERNAME: 'airflow'
